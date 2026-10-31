@@ -186,6 +186,9 @@
                 mask-image: linear-gradient(to bottom right, transparent 50%, #000 50%);
     }
     @media (max-width: 768px) { .lp-dots::before { width: 70%; background-size: 36px 36px; } }
+    /* Sections that are themselves the centred container: stretch dots to the page edge */
+    .page-main { overflow-x: clip; }
+    .page__container.lp-dots::before { right: calc((100% - 100vw) / 2); width: calc(46% + (100vw - 100%) / 2); }
 
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -909,7 +912,7 @@ Stocks • Options • Indices • Automated Execution • Live Trading.</p>
             </div>
         </section>
       
-<section class="p-home-m-seoblog p-home__section page__container">
+<section class="p-home-m-seoblog p-home__section page__container lp-dots">
     <div class="p-home-m-seoblog__head-wrap">
         <div class="p-home-m-seoblog__head-text-wrap">
             <h2 class="com-c-title p-home-m-seoblog__title" data-trans="seoblog_title">
@@ -1273,7 +1276,7 @@ Stocks • Options • Indices • Automated Execution • Live Trading.</p>
     </div>
 </section>
         
-<section class="p-home-m-seoblog p-home__section page__container">
+<section class="p-home-m-seoblog p-home__section page__container lp-dots">
     <div class="p-home-m-seoblog__head-wrap">
         <div class="p-home-m-seoblog__head-text-wrap">
             <h2 class="com-c-title p-home-m-seoblog__title" data-trans="seoblog_title">
