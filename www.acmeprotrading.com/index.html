@@ -136,7 +136,62 @@
             /* Moves to original position */
         }
     </style>
-<link href="../cdn.jsdelivr.net/npm/aos%402.3.4/dist/aos.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<style>
+    /* ===== Landing page animations ===== */
+    /* Hero: floating images */
+    @keyframes lp-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+    @keyframes lp-float-sm { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-10px) rotate(-3deg); } }
+    @keyframes lp-hero-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+    .lp-float-main { animation: lp-float 6s ease-in-out infinite; }
+    .lp-float-a { animation: lp-float-sm 4.5s ease-in-out infinite; }
+    .lp-float-b { animation: lp-float-sm 5.2s ease-in-out -2s infinite; }
+    .p-home-m-welcome__content > * { animation: lp-hero-in .9s cubic-bezier(.2,.7,.2,1) both; }
+    .p-home-m-welcome__content > *:nth-child(2) { animation-delay: .12s; }
+    .p-home-m-welcome__content > *:nth-child(3) { animation-delay: .24s; }
+
+    /* Count-up numbers */
+    .lp-count { font-variant-numeric: tabular-nums; }
+
+    /* Hover lift on cards */
+    .p-home-m-seo-for-everyone__item,
+    .p-home-m-seoblog__link,
+    .p-home-m-seo-numbers-item,
+    .p-home-m-seo-become-a-trader__item-wrap,
+    .sec-card, .net-feat {
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .p-home-m-seo-for-everyone__item:hover,
+    .p-home-m-seoblog__link:hover,
+    .p-home-m-seo-numbers-item:hover,
+    .net-feat:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 18px 40px rgba(0,0,0,.25);
+    }
+
+    /* Buttons */
+    .com-c-button, a[href="./register.html"] { transition: transform .2s ease, filter .2s ease, box-shadow .2s ease; }
+    .com-c-button:hover, a[href="./register.html"]:hover { transform: translateY(-2px); filter: brightness(1.08); }
+
+    /* Logo strip: pause on hover */
+    .scrolling-strip:hover { animation-play-state: paused; }
+
+    /* Dotted pattern on the right of white sections */
+    .lp-dots { position: relative; isolation: isolate; }
+    .lp-dots::before {
+        content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 46%; z-index: -1; pointer-events: none;
+        background-image: radial-gradient(circle, #111 2.2px, transparent 2.8px);
+        background-size: 52px 52px; background-position: right 12px top 12px;
+        -webkit-mask-image: linear-gradient(to bottom right, transparent 50%, #000 50%);
+                mask-image: linear-gradient(to bottom right, transparent 50%, #000 50%);
+    }
+    @media (max-width: 768px) { .lp-dots::before { width: 70%; background-size: 36px 36px; } }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation: none !important; transition: none !important; }
+        [data-aos] { opacity: 1 !important; transform: none !important; }
+    }
+</style>
 </head>
 
 <body data-theme="dark">
@@ -441,9 +496,9 @@
                 </div>
             </div>
             <div class="p-home-m-welcome__img" style="position:relative;height: 350px;">
-                <img src="assets/hero-img.svg" style="position: absolute;width: 80%;right: 0;top: 0;" />
-                <img src="assets/hero-img1.svg" style="position: absolute;width: 10%;left: 25%;" />
-                <img src="assets/hero-img2.svg" style="position: absolute;width: 10%;left: 25%;top: 60%;;" />
+                <img src="assets/hero-img.svg" class="lp-float-main" style="position: absolute;width: 80%;right: 0;top: 0;" />
+                <img src="assets/hero-img1.svg" class="lp-float-a" style="position: absolute;width: 10%;left: 25%;" />
+                <img src="assets/hero-img2.svg" class="lp-float-b" style="position: absolute;width: 10%;left: 25%;top: 60%;;" />
             </div>
         </section>
         <div
@@ -2187,11 +2242,76 @@ Stocks • Options • Indices • Automated Execution • Live Trading.</p>
             elements.forEach(el => observer.observe(el));
         });
     </script>
-    <script src="../cdn.jsdelivr.net/npm/aos%402.3.4/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script>
-        AOS.init({
-            duration: 1200,
-        })
+        (function () {
+            // 1) Scroll reveal for every section heading/card that has no animation yet
+            document.querySelectorAll('.page-main section h2, .page-main section h3, .page-main section p, .sec-card, .net-latency, .net-feat')
+                .forEach(function (el) {
+                    if (!el.closest('[data-aos]') && !el.closest('.p-home-m-welcome') && !el.querySelector('[data-aos]')) {
+                        el.setAttribute('data-aos', 'fade-up');
+                    }
+                });
+            // Stagger cards that sit side by side
+            document.querySelectorAll('.sec-grid, .net-feats, .values-grid').forEach(function (grid) {
+                Array.prototype.forEach.call(grid.children, function (card, i) { card.setAttribute('data-aos-delay', String(i * 100)); });
+            });
+
+            if (window.AOS) { AOS.init({ duration: 900, once: true, offset: 80, easing: 'ease-out-cubic' }); }
+
+            // 3) Dotted pattern on white sections
+            function bgOf(el) {
+                for (var n = el; n && n.nodeType === 1; n = n.parentElement) {
+                    var cs = getComputedStyle(n);
+                    if (cs.backgroundImage && cs.backgroundImage !== 'none') return null; // image/gradient = not plain white
+                    var m = cs.backgroundColor.match(/\d+(\.\d+)?/g);
+                    if (m && (m.length < 4 || parseFloat(m[3]) > 0)) return m.slice(0, 3).map(Number);
+                }
+                return [255, 255, 255];
+            }
+            document.querySelectorAll('.page-main section, .page-main > div, #___gatsby section').forEach(function (sec) {
+                if (sec.parentElement && sec.parentElement.closest('.lp-dots')) return;
+                if (sec.offsetHeight < 220) return;
+                var c = bgOf(sec);
+                if (c && Math.min(c[0], c[1], c[2]) >= 245) sec.classList.add('lp-dots');
+            });
+
+            // 2) Count-up stats (130+, 1M+, 30M+, $16M+, $211M)
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var counters = [];
+            document.querySelectorAll('.p-home-m-seo-numbers-item__head span').forEach(function (span) {
+                var node = span.firstChild;
+                if (!node || node.nodeType !== 3) return;
+                var m = node.nodeValue.match(/^(\s*)(\$?)(\d+(?:\.\d+)?)([A-Za-z+%]*)(.*)$/s);
+                if (!m) return;
+                var wrap = document.createElement('span');
+                wrap.className = 'lp-count';
+                wrap.dataset.prefix = m[2]; wrap.dataset.target = m[3]; wrap.dataset.suffix = m[4];
+                wrap.textContent = m[2] + m[3] + m[4];
+                span.insertBefore(document.createTextNode(m[1]), node);
+                span.insertBefore(wrap, node);
+                node.nodeValue = m[5];
+                counters.push(wrap);
+            });
+            function run(el) {
+                var target = parseFloat(el.dataset.target), dec = (el.dataset.target.split('.')[1] || '').length;
+                var start = null, dur = 1800;
+                function tick(t) {
+                    if (!start) start = t;
+                    var p = Math.min((t - start) / dur, 1), eased = 1 - Math.pow(1 - p, 3);
+                    el.textContent = el.dataset.prefix + (target * eased).toFixed(dec) + el.dataset.suffix;
+                    if (p < 1) requestAnimationFrame(tick);
+                }
+                requestAnimationFrame(tick);
+            }
+            if (!reduce && 'IntersectionObserver' in window) {
+                counters.forEach(function (el) { el.textContent = el.dataset.prefix + '0' + el.dataset.suffix; });
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) { if (e.isIntersecting) { run(e.target); io.unobserve(e.target); } });
+                }, { threshold: 0.4 });
+                counters.forEach(function (el) { io.observe(el); });
+            }
+        })();
     </script>
 
     <!-- Smartsupp Live Chat script -->
