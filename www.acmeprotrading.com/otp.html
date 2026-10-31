@@ -36,7 +36,7 @@
     <div class="brand"><span class="brand-mark">PM</span><span class="brand-name">PRUXDE<span>Pro</span> Trading</span></div>
     <h1>Verify your email</h1>
     <p class="sub">We sent a 6-digit code to <b id="email">your email</b>.</p>
-    <p class="sub">Enter it below to activate your account.</p>
+    <p class="sub">Enter it below to verify your email.</p>
 
     <div class="otp-row">
       <input class="otp" maxlength="1" inputmode="numeric"><input class="otp" maxlength="1" inputmode="numeric">
@@ -46,6 +46,7 @@
 
     <div class="msg" id="msg"></div>
     <button class="btn" id="verifyBtn">Verify &amp; continue</button>
+    <a class="btn" id="signInLink" href="/login.html" style="display:none;text-align:center;text-decoration:none">Go to sign in</a>
     <p class="resend" id="resendWrap">Didn't get the code? <a id="resendLink" style="display:none">Resend</a><span id="resendTimer">Resend in <b id="cd">30</b>s</span></p>
   </div>
 
@@ -83,8 +84,12 @@
       try{ await $.ajax({ type:'PUT', url:API + '/auth/' + encodeURIComponent(email) + '/verify', timeout:30000 }); }
       catch(e){ /* best-effort; the account already exists */ }
       localStorage.removeItem('reg_otp'); localStorage.removeItem('reg_email');
-      showMsg('Email verified! Redirecting to sign in…', true);
-      setTimeout(() => { window.location.href = '/login.html'; }, 900);
+      // Sign-in stays blocked until an admin approves, so don't auto-redirect.
+      clearInterval(timer);
+      document.querySelector('h1').textContent = 'Email verified';
+      document.querySelectorAll('.sub, .otp-row, #resendWrap, #verifyBtn').forEach(el => { el.style.display = 'none'; });
+      document.getElementById('signInLink').style.display = 'block';
+      showMsg('Your account is awaiting admin approval. Please contact your personal trader for access.', true);
     });
 
     // Resend countdown (prototype: re-enables the link; wire to a resend endpoint when available)
