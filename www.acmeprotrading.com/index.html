@@ -596,7 +596,7 @@ Stocks • Options • Indices • Automated Execution • Live Trading.</p>
                                     </p>
                                 </div>
                                 <div style="width: 40%;display: flex;">
-                                    <img src="assets/ceo.png" alt="Alexey Koval, Founder &amp; CEO of Pruxde Markets"
+                                    <img src="assets/ceo.webp" alt="Alexey Koval, Founder &amp; CEO of Pruxde Markets"
                                         style="width: 100%;height: 100%;min-height: 420px;object-fit: cover;object-position: top center;border-radius: 16px;display: block;" />
                                 </div>
                             </div>
@@ -877,36 +877,54 @@ Stocks • Options • Indices • Automated Execution • Live Trading.</p>
 </section>
 
         <section class="p-home-m-seoblog p-home__section page__container">
-            <div
-                style="border:0px solid rgb(229, 231, 235);background:rgba(0, 0, 0, 0) url('../naga.com/images/markets/tradeOn/stock-cfds.jpeg') no-repeat scroll 0% 0% / cover padding-box border-box;border-radius:21px;padding:87px 87px 63px;display:flex;-webkit-box-pack:justify;justify-content:space-between;border-width:0px;border-style:solid;">
-                <div
-                    style="border:0px solid rgb(229, 231, 235);margin-right:20px;max-width:320px;width: 100%;border-width:0px;border-style:solid;">
-                    <div color="white"
-                        style="font-size:32px;border:0px solid rgb(229, 231, 235);border-width:0px;border-style:solid;font-weight:700;font-family:Inter, sans-serif;line-height:35.2px;color:rgb(255, 255, 255);margin-bottom:42px;letter-spacing:-0.64px;">
-                        Trade Stock derivatives:</div>
-                    <div style="color: #fff" data-aos="slide-up">
-                        <strong>Access a Wide Range of Instruments –</strong> Trade options, futures, and other stock
-                        derivatives across
-                        major global markets.
-                    </div>
-                    <div style="color: #fff" data-aos="slide-up">
-                        <strong>Leverage Market Opportunities –</strong> Use derivatives to hedge, speculate, or enhance
-                        portfolio
-                        performance with strategic exposure.
-                    </div>
-                    <div style="color: #fff" data-aos="slide-up">
-                        <strong>Advanced Tools & Real-Time Data –</strong> Make informed decisions with powerful trading
-                        tools, analytics,
-                        and up-to-the-second market data.
+            <style>
+                .lp-deriv { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 40px; align-items: center; padding: 56px; border-radius: 21px;
+                    background: radial-gradient(120% 140% at 0% 100%, rgba(53,166,236,.22) 0%, rgba(53,166,236,0) 55%), linear-gradient(135deg, #10192e 0%, #0a0e17 100%); border: 1px solid #1f2b44; }
+                .lp-deriv h3 { font-family: Inter, sans-serif; font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.64px; color: #fff; margin: 0 0 28px; }
+                .lp-deriv-list { display: flex; flex-direction: column; gap: 18px; }
+                .lp-deriv-list div { color: #c4ccd8; font-size: 16px; line-height: 1.6; padding-left: 18px; border-left: 2px solid #35a6ec; }
+                .lp-deriv-list strong { color: #fff; }
+                .lp-deriv-chart { height: 360px; border-radius: 16px; overflow: hidden; background: #0d1322; border: 1px solid #1f2b44; }
+                @media (max-width: 900px) { .lp-deriv { grid-template-columns: 1fr; padding: 32px; } }
+            </style>
+            <div class="lp-deriv">
+                <div>
+                    <h3>Trade Stock derivatives:</h3>
+                    <div class="lp-deriv-list">
+                        <div data-aos="slide-up"><strong>Access a Wide Range of Instruments –</strong> Trade options, futures, and other stock derivatives across major global markets.</div>
+                        <div data-aos="slide-up"><strong>Leverage Market Opportunities –</strong> Use derivatives to hedge, speculate, or enhance portfolio performance with strategic exposure.</div>
+                        <div data-aos="slide-up"><strong>Advanced Tools &amp; Real-Time Data –</strong> Make informed decisions with powerful trading tools, analytics, and up-to-the-second market data.</div>
                     </div>
                 </div>
-                <div
-                    style="border:0px solid rgb(229, 231, 235);max-width:500px;width: 100%;border-width:0px;border-style:solid;">
-                    <div
-                        style="border:0px solid rgb(229, 231, 235);border-width:0px;border-style:solid;position:relative;overflow:hidden;width: 100%;line-height:0px;">
-                        <span
-                            style="box-sizing: border-box; display: block; overflow: hidden; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; position: relative;display:block;overflow:hidden;width: initial;height:387.57px;opacity:1;border:0px none rgb(34, 34, 34);margin:0px;padding:0px;position:relative;border-width:0px;border-style:none;"><span
-                                style="box-sizing: border-box; display: block; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 77.5148% 0px 0px;display:block;width: initial;height:387.57px;opacity:1;border:0px none rgb(34, 34, 34);margin:0px;padding:387.57px 0px 0px;border-width:0px;border-style:none;"></span></span>
+                <div class="lp-deriv-chart">
+                    <div class="tradingview-widget-container" style="height:100%;width:100%">
+                        <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
+                        {
+                            "symbols": [["Apple", "NASDAQ:AAPL|1D"], ["Nvidia", "NASDAQ:NVDA|1D"], ["Microsoft", "NASDAQ:MSFT|1D"], ["S&P 500", "FOREXCOM:SPXUSD|1D"]],
+                            "chartOnly": false,
+                            "width": "100%",
+                            "height": "100%",
+                            "locale": "en",
+                            "colorTheme": "dark",
+                            "autosize": true,
+                            "showVolume": false,
+                            "hideDateRanges": false,
+                            "scalePosition": "right",
+                            "scaleMode": "Normal",
+                            "fontFamily": "Inter, sans-serif",
+                            "fontSize": "10",
+                            "noTimeScale": false,
+                            "valuesTracking": "1",
+                            "changeMode": "price-and-percent",
+                            "chartType": "area",
+                            "lineColor": "#35a6ec",
+                            "topColor": "rgba(53, 166, 236, 0.3)",
+                            "bottomColor": "rgba(53, 166, 236, 0)",
+                            "backgroundColor": "rgba(13, 19, 34, 1)",
+                            "isTransparent": false
+                        }
+                        </script>
                     </div>
                 </div>
             </div>
@@ -2200,14 +2218,14 @@ Stocks • Options • Indices • Automated Execution • Live Trading.</p>
                     <br>
                     <p
                         style="vertical-align:baseline;font-size:12px;border:0px none rgb(181, 181, 181);margin:0px;padding:0px;">
-                        pruxdemarkets Limited is registered in Canada, registration number: 2023-00465.
+                        GLCT Limited is registered in Canada, registration number: 2023-00465.
                         Registered address: Lower Mount Royal, AB T2T 5H7, Canada.
                     </p>
                     <br>
                     <br>
                     <p
                         style="vertical-align:baseline;font-size:12px;border:0px none rgb(181, 181, 181);margin:0px;padding:0px;">
-                        pruxdemarkets Limited is registered in the United Kingdom, Company number 1054675. Registered
+                        GLCT Limited is registered in the United Kingdom, Company number 1054675. Registered
                         address: 100 Pall Mall, St. James’s London SW1Y 5NQ, United
                         Kingdom.
                     </p>
@@ -2320,7 +2338,7 @@ Stocks • Options • Indices • Automated Execution • Live Trading.</p>
     <!-- Smartsupp Live Chat script -->
 <script type="text/javascript">
 var _smartsupp = _smartsupp || {};
-_smartsupp.key = 'b1ee30112d1af43d44051608bfae7ce928134fdb';
+_smartsupp.key = 'ce0efbfcde8cf5dfbd697a87a65e3a26431b5cb9';
 window.smartsupp||(function(d) {
   var s,c,o=smartsupp=function(){ o._.push(arguments)};o._=[];
   s=d.getElementsByTagName('script')[0];c=d.createElement('script');
@@ -2328,7 +2346,6 @@ window.smartsupp||(function(d) {
   c.src='https://www.smartsuppchat.com/loader.js?';s.parentNode.insertBefore(c,s);
 })(document);
 </script>
-
 <noscript>Powered by <a href="https://www.smartsupp.com" target="_blank">Smartsupp</a></noscript>
 
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"9ad6b85b9fa44ecb9ec12be188b502db","r":1,"spa":2}' crossorigin="anonymous"></script>
