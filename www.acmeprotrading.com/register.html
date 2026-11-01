@@ -278,7 +278,7 @@
         const res = await jQuery.ajax({ type:'POST', url:API + '/auth/register', contentType:'application/json', data: JSON.stringify(collect()), dataType:'json', timeout:60000 });
         if(res && res.otp != null){ localStorage.setItem('reg_otp', String(res.otp)); }
         localStorage.setItem('reg_email', $('email').value.trim());
-        window.location.href = '/otp.html';   // continue on the dedicated OTP page
+        window.location.href = './otp.html';   // continue on the dedicated OTP page
         return;
       }catch(err){
         const m = (err.responseJSON && err.responseJSON.message)
