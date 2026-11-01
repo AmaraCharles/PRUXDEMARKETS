@@ -1542,7 +1542,10 @@ html, body {
 .fx-usd-ico { font-weight: 700; color: #05232b; background: hsl(142 60% 55%); }
 
 /* Investment Plans product */
-.inv-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1rem; }
-.inv-rows > div { display: flex; justify-content: space-between; gap: 0.5rem; font-variant-numeric: tabular-nums; }
+.inv-plans-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.inv-plans-grid > .home-card { min-width: 0; }
+.inv-rows { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr)); gap: 0.4rem 1rem; }
+.inv-rows > div { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; min-width: 0; font-variant-numeric: tabular-nums; }
+.inv-rows strong { text-align: right; white-space: nowrap; }
 .inv-progress { height: 6px; border-radius: 9999px; background: hsl(var(--muted)); margin-top: 0.75rem; overflow: hidden; }
 .inv-progress > div { height: 100%; background: hsl(var(--fx-cyan)); }

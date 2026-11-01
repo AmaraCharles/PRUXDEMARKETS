@@ -3716,7 +3716,7 @@ function renderInvestProductsPage() {
   content.innerHTML = `
     <div class="fx-page">
       <div style="margin-bottom:1.5rem;"><h1 style="font-size:1.5rem;font-weight:700;margin-bottom:.5rem;">Investment Plans</h1><p class="text-muted">Invest in a managed fund and earn daily returns over the term.</p></div>
-      <div class="holdings-grid">${cards}</div>
+      <div class="inv-plans-grid">${cards}</div>
       <h2 style="font-size:1.25rem;font-weight:600;margin:1.5rem 0 1rem;">My Investments</h2>
       ${activeHTML}
     </div>`;
