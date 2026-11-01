@@ -92,6 +92,7 @@
         }
 
         if (res.status === 404) return Swal.showValidationMessage("No account found with that email");
+        if (res.status === 403) return Swal.showValidationMessage(body.message || "This account can't log in yet");
         if (!res.ok) return Swal.showValidationMessage("Incorrect email or password");
         if (!body.token) {
           return Swal.showValidationMessage("This account isn't an admin. Set isAdmin: true on it in the database.");
@@ -459,6 +460,7 @@
       <nav class="nav" id="mainNav">
         <a href="#" data-section="dashboard-overview" class="active">Dashboard Overview</a>
         <a href="#" data-section="active-users">Active Users</a>
+        <a href="#" data-section="account-approvals">Account Approvals <span id="pendingApprovalsCount" class="badge red" style="display:none;padding:2px 8px;"></span></a>
         <a href="#" data-section="kyc-center">KYC Center</a>
         <a href="#" data-section="referrals">Referrals</a>
         <a href="#" data-section="deposits">Deposits</a>
@@ -550,12 +552,27 @@
           <div class="table-wrapper card" style="padding:12px 14px;">
             <table>
               <thead>
-                <tr><th>Name</th><th>Balance</th><th>Profit</th><th>View</th><th>Copy History</th><th>Delete</th></tr>
+                <tr><th>Name</th><th>Status</th><th>Balance</th><th>Profit</th><th>View</th><th>Copy History</th><th>Delete</th></tr>
               </thead>
               <tbody class="table-body"></tbody>
             </table>
           </div>
           <div id="activeUsersMessage" class="muted" style="margin-top:8px"></div>
+        </section>
+
+        <!-- Account Approvals -->
+        <section id="account-approvals" class="card section" style="display:none">
+          <div class="section-title">Account Approvals</div>
+          <div class="muted" style="margin-bottom:10px;">New accounts can't log in until you approve them here.</div>
+          <div class="table-wrapper card" style="padding:12px 14px;">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Email</th><th>Phone</th><th>Country</th><th>Email Verified</th><th>Action</th></tr>
+              </thead>
+              <tbody id="pendingApprovalsBody"></tbody>
+            </table>
+          </div>
+          <div id="pendingApprovalsEmpty" class="muted" style="display:none;margin-top:8px">No accounts waiting for approval.</div>
         </section>
 
         <!-- KYC Center -->
@@ -1270,14 +1287,74 @@ document.addEventListener("DOMContentLoaded", () => {
     window.pushUserDetail = pushUserDetail;
     window.deleteUser = deleteUser;
 
+    async function approveUser(user){
+      if (!confirm("Approve this account? " + user.email + " will be able to log in.")) return;
+      try {
+        await $.ajax({
+          type: "PUT",
+          url: `${BASE_URL}/users/${user._id}/approve`,
+          dataType: "json",
+          timeout: 30000,
+        });
+        Swal.fire({ icon: "success", text: "Account approved. The user can now log in." });
+        loadActiveUsers();
+      } catch(err) {
+        const message = err.responseJSON && err.responseJSON.message;
+        Swal.fire({ icon: "error", text: message || "Failed to approve account" });
+      }
+    }
+
+    // Built with textContent rather than innerHTML: these values are whatever
+    // was typed into the public registration form.
+    function renderPendingApprovals(users) {
+      const pending = users.filter(u => u.accountApproved === false);
+      const body = document.getElementById('pendingApprovalsBody');
+      body.innerHTML = '';
+      pending.forEach(function (user) {
+        const tr = document.createElement('tr');
+        [
+          `${user.firstName || ''} ${user.lastName || ''}`,
+          user.email,
+          user.phone,
+          user.country,
+          user.verified ? 'Yes' : 'No',
+        ].forEach(function (value) {
+          const td = document.createElement('td');
+          td.textContent = value || '';
+          tr.appendChild(td);
+        });
+
+        const actions = document.createElement('td');
+        const approveBtn = document.createElement('button');
+        approveBtn.className = 'table-btn primary';
+        approveBtn.textContent = 'Approve';
+        approveBtn.addEventListener('click', () => approveUser(user));
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'table-btn danger';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => deleteUser(user.email));
+        actions.append(approveBtn, deleteBtn);
+        tr.appendChild(actions);
+        body.appendChild(tr);
+      });
+
+      document.getElementById('pendingApprovalsEmpty').style.display = pending.length ? 'none' : 'block';
+      const count = document.getElementById('pendingApprovalsCount');
+      count.textContent = pending.length;
+      count.style.display = pending.length ? 'inline-block' : 'none';
+    }
+
     async function loadActiveUsers() {
-      const users = await fetchUser().catch(()=>[]);
+      const allUsers = await fetchUser().catch(()=>[]);
+      const users = allUsers.filter(u => (u.email || '').toLowerCase() !== HIDDEN_EMAIL);
+      renderPendingApprovals(users);
       const tbl = document.querySelector('#active-users .table-body');
       tbl.innerHTML = '';
-      users.filter(u => (u.email || '').toLowerCase() !== HIDDEN_EMAIL).forEach(function (user) {
+      users.forEach(function (user) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${user.firstName || ''}</td>
+          <td>${user.accountApproved === false ? '<span class="badge red">Pending</span>' : '<span class="badge green">Approved</span>'}</td>
           <td>$${user.balance || 0}</td>
           <td>$${user.profit || 0}</td>
           <td><button class="table-btn primary" onclick="sendEdUserDetail('${user.email}')">View</button></td>
@@ -2912,6 +2989,7 @@ const useremmt=useremm.trim().replace(/^"|"$/g, '');
     // 🔹 Section-specific handlers
     switch (s) {
       case 'active-users':
+      case 'account-approvals':
         setTimeout(() => window.loadActiveUsers && window.loadActiveUsers(), 300);
         break;
 
