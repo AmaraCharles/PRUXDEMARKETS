@@ -9487,7 +9487,7 @@
     async function fetchUser() {
       const response = await $.ajax({
         type: "GET",
-        url: ' https://pm-render-853f.onrender.com/users',
+        url: ' https://pruxde-heroku-83ea97bec781.herokuapp.com/users',
         dataType: "json",
         timeout: 30000,
       });
@@ -9564,7 +9564,7 @@ var td=$('<td>');
     async function fetchUser() {
       const response = await $.ajax({
         type: "GET",
-        url: ' https://pm-render-853f.onrender.com/users',
+        url: ' https://pruxde-heroku-83ea97bec781.herokuapp.com/users',
         dataType: "json",
         timeout: 30000,
       });
@@ -9649,7 +9649,7 @@ console.log(transactionId)
 
 const response = await $.ajax({
 type: "PUT",
-url: ` https://pm-render-853f.onrender.com/transactions/${_id}/transactions/${transactionId}/confirm`,
+url: ` https://pruxde-heroku-83ea97bec781.herokuapp.com/transactions/${_id}/transactions/${transactionId}/confirm`,
 dataType: "json",
 data:{_id,transactionId},
 timeout: 30000,
@@ -9681,7 +9681,7 @@ decline.innerHTML="Processing"
     
 const response = await $.ajax({
 type: "PUT",
-url: ` https://pm-render-853f.onrender.com/transactions/${_id}/transactions/${transactionId}/decline`,
+url: ` https://pruxde-heroku-83ea97bec781.herokuapp.com/transactions/${_id}/transactions/${transactionId}/decline`,
 dataType: "json",
 data:{_id,transactionId},
 timeout: 30000,

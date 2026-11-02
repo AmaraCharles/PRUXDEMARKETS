@@ -44,7 +44,7 @@ export default function Withdrawal() {
 
     try {
       const response = await fetch(
-        `https://pm-render-853f.onrender.com/transactions/${dataObj._id}/withdrawal`,
+        `https://pruxde-heroku-83ea97bec781.herokuapp.com/transactions/${dataObj._id}/withdrawal`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
