@@ -2943,14 +2943,8 @@ function renderFundAccountPage() {
       <label for="depositWallet">Deposit Channel</label>
       <select id="depositWallet" class="input" required>
         <option value="">Select a Wallet</option>
-        <option value="bitcoin">Bitcoin</option>
-        <option value="ethereum">Ethereum</option>
-        <option value="solana">Solana</option>
-        <option value="usdt">USDT (TRC20)</option>
-        <option value="usdt2">USDT (ERC20)</option>
-        <option value="litecoin">LTC</option>
-       
       </select>
+      <p id="walletsStatus" class="text-muted small" style="margin: 0.4rem 0 0;">Loading deposit wallets…</p>
     </div>
 
     <div class="form-group">
@@ -2976,16 +2970,43 @@ function renderFundAccountPage() {
   const walletAddress = document.getElementById("walletAddress");
   const walletQr = document.getElementById("walletQr");
 
-  // Replace with actual addresses from user object
- const wallets = {
-    bitcoin: { label: "Bitcoin", address: "bc1q70hx8f5rzlv7g9man8gat77kup5v0s8ennvqaq", qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=bc1q70hx8f5rzlv7g9man8gat77kup5v0s8ennvqaq" },
-    ethereum: { label: "Ethereum", address: "0xbe085b0F1F7cd38EEC8D804f40Bfd1703F380C51", qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0xbe085b0F1F7cd38EEC8D804f40Bfd1703F380C51" },
-    usdt: { label: "USDT (TRC20)", address: "TYcK8LbaAZYbn2n3o7MfJjkxFgEAZfGXPC", qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TYcK8LbaAZYbn2n3o7MfJjkxFgEAZfGXPC" },
-     usdt2: { label: "USDT (ERC20)", address: "0xbe085b0F1F7cd38EEC8D804f40Bfd1703F380C51", qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0xbe085b0F1F7cd38EEC8D804f40Bfd1703F380C51" },
-  
+  // Deposit wallets come from the backend (admin-managed via PUT /settings/wallets).
+  // Keyed by the wallet's `key`, which is also sent as the deposit "method".
+  const wallets = {};
+  const walletsStatus = document.getElementById("walletsStatus");
 
-    solana: { label: "SOL", address: "CYAn5Le2dRBvSFVVxuPr527jbKLZb96k82kUWh9ZQ77d", qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=CYAn5Le2dRBvSFVVxuPr527jbKLZb96k82kUWh9ZQ77d" },
-  };
+  $.ajax({
+    type: "GET",
+    url: "https://pruxde-heroku-83ea97bec781.herokuapp.com/settings/wallets",
+    dataType: "json",
+    cache: false,
+    timeout: 30000
+  }).then(res => {
+    const select = document.getElementById("depositWallet");
+    if (!select) return;
+    const list = (res && Array.isArray(res.data)) ? res.data : [];
+    // Insert crypto wallets right after the placeholder, before Wire/Demo if those loaded first.
+    const anchor = select.querySelector('option[value="wire"], option[value="demo"]');
+    list.forEach(w => {
+      if (!w || !w.key || !w.address) return;
+      wallets[w.key] = {
+        label: w.label,
+        address: w.address,
+        qr: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(w.address)
+      };
+      const opt = document.createElement("option");
+      opt.value = w.key;
+      opt.textContent = w.label;
+      select.insertBefore(opt, anchor);
+    });
+    if (walletsStatus) {
+      if (list.length) walletsStatus.remove();
+      else walletsStatus.textContent = "No crypto deposit wallets are available right now. Please contact support.";
+    }
+  }).catch(err => {
+    console.error("Error loading deposit wallets:", err);
+    if (walletsStatus) walletsStatus.textContent = "Couldn't load deposit wallets. Please refresh the page or contact support.";
+  });
 
 
   // Demo deposit method — only offered when an admin has switched it on.
