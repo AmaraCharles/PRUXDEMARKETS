@@ -466,6 +466,7 @@
         <a href="#" data-section="deposits">Deposits</a>
         <a href="#" data-section="wire-transfer-settings">💳 Wire Transfer</a>
         <a href="#" data-section="demo-settings">🎮 Demo Deposit</a>
+        <a href="#" data-section="deposit-wallets">👛 Deposit Wallets</a>
         <a href="#" data-section="traders-list">Traders List</a>
         <a href="#" data-section="investment-plans">Investment Plans</a>
         <a href="#" data-section="manage-plans">📝 Manage Plans</a>
@@ -701,6 +702,56 @@
               <button id="demoPreviewBtn" class="btn ghost">Preview</button>
               <button id="demoDeleteBtn" class="btn" style="background:var(--danger);">Delete Message</button>
             </div>
+          </div>
+        </section>
+
+        <!-- Deposit Wallets (crypto addresses shown on the user Fund Account page) -->
+        <section id="deposit-wallets" class="card section" style="display:none">
+          <div class="section-title">👛 Deposit Wallets</div>
+          <p style="opacity:.7;margin-bottom:12px;">Crypto wallets users can deposit to from the Fund Account page. Only <b>enabled</b> wallets are shown. Changes apply when you click <b>Save Changes</b> and need your admin password.</p>
+
+          <div id="dwIntegrity" class="card" style="display:none;margin-bottom:12px;border:1px solid var(--danger);color:var(--danger);font-weight:600;">
+            ⚠️ Integrity check failed: the saved wallets were changed outside this admin page, so users currently see no wallets. Review the list below and save it again to restore it.
+          </div>
+
+          <div class="card" style="margin-bottom:12px;">
+            <div style="font-weight:700;margin-bottom:10px;">Add a wallet</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 12px;align-items:end;">
+              <div>
+                <label class="muted" for="dw_label">Label (shown to users)</label>
+                <input id="dw_label" class="input" maxlength="40" placeholder="e.g. USDT (TRC20)" style="width:100%;" />
+              </div>
+              <div>
+                <label class="muted" for="dw_network">Network</label>
+                <select id="dw_network" class="input" style="width:100%;"></select>
+              </div>
+              <div style="grid-column:1/-1;">
+                <label class="muted" for="dw_address">Address</label>
+                <input id="dw_address" class="input" placeholder="Paste the wallet address" style="width:100%;font-family:monospace;" />
+              </div>
+            </div>
+            <button id="dwAddBtn" class="btn ghost" style="margin-top:10px;">+ Add to list</button>
+          </div>
+
+          <div class="table-wrapper card" style="overflow-x:auto;">
+            <table>
+              <thead><tr><th>Label</th><th>Network</th><th>Address</th><th>Enabled</th><th></th></tr></thead>
+              <tbody id="dwBody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center;">
+            <button class="btn" id="dwSaveBtn">Save Changes</button>
+            <button class="btn ghost" id="dwReloadBtn">Discard &amp; Reload</button>
+            <span id="dwStatus" class="muted" style="font-size:13px;"></span>
+          </div>
+
+          <hr style="margin:20px 0;opacity:.25;">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:6px;">Change history</h3>
+          <div class="table-wrapper card" style="overflow-x:auto;">
+            <table>
+              <thead><tr><th>When</th><th>Action</th><th>Admin</th><th>IP</th><th>Details</th></tr></thead>
+              <tbody id="dwHistory"></tbody>
+            </table>
           </div>
         </section>
 
@@ -3522,6 +3573,191 @@ window.smartsupp||(function(d) {
     const sv = document.getElementById("ipSave");
     if (sv) sv.onclick = save;
     load();
+  });
+})();
+</script>
+<script>
+/* Deposit Wallets admin — GET /settings/wallets/admin, PUT /settings/wallets.
+   The backend requires the admin's current password, the version that was
+   loaded (to block blind overwrites) and validates every address format. */
+(function DepositWalletsAdminScript() {
+  const API = "https://pruxde-heroku-83ea97bec781.herokuapp.com/settings/wallets";
+  const RESERVED = ["wire", "demo", "constructor", "prototype", "hasownproperty", "tostring", "valueof"];
+  let wallets = [];   // working copy: { key, label, network, address, enabled }
+  let networks = [];  // [{ id, name }]
+  let version = 0;
+  let dirty = false;
+
+  const $id = (id) => document.getElementById(id);
+  const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` });
+  const errMsg = (err, fallback) => {
+    if (err && err.status === 401) return "Please log in as an admin again.";
+    return (err && err.responseJSON && err.responseJSON.message) || fallback;
+  };
+
+  function setStatus(text) { const el = $id("dwStatus"); if (el) el.textContent = text || ""; }
+  function markDirty() { dirty = true; setStatus("Unsaved changes"); }
+
+  // Stable id derived from the label. It is stored as the deposit "method",
+  // so existing wallets keep their key when edited.
+  function makeKey(label) {
+    let base = String(label).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    if (!/^[a-z]/.test(base)) base = "w_" + base;
+    base = base.slice(0, 28);
+    if (base.length < 2) base = "wallet";
+    let key = base, n = 2;
+    while (RESERVED.includes(key) || wallets.some(w => w.key === key)) key = `${base}_${n++}`;
+    return key;
+  }
+
+  function networkOptions(selected) {
+    return networks.map(n => `<option value="${esc(n.id)}" ${n.id === selected ? "selected" : ""}>${esc(n.name)}</option>`).join("");
+  }
+
+  function render() {
+    const body = $id("dwBody");
+    if (!body) return;
+    if (!wallets.length) {
+      body.innerHTML = `<tr><td colspan="5" class="muted" style="text-align:center;padding:16px;">No wallets yet. Add one above, then click Save Changes.</td></tr>`;
+      return;
+    }
+    body.innerHTML = wallets.map((w, i) => `
+      <tr>
+        <td><input class="input" data-i="${i}" data-f="label" maxlength="40" value="${esc(w.label)}" style="min-width:140px;"></td>
+        <td><select class="input" data-i="${i}" data-f="network" style="min-width:160px;">${networkOptions(w.network)}</select></td>
+        <td><input class="input" data-i="${i}" data-f="address" value="${esc(w.address)}" style="min-width:300px;font-family:monospace;"></td>
+        <td style="text-align:center;"><input type="checkbox" data-i="${i}" data-f="enabled" ${w.enabled ? "checked" : ""}></td>
+        <td><button class="small-btn danger" data-remove="${i}">Remove</button></td>
+      </tr>`).join("");
+  }
+
+  function renderHistory(history) {
+    const body = $id("dwHistory");
+    if (!body) return;
+    if (!history || !history.length) {
+      body.innerHTML = `<tr><td colspan="5" class="muted" style="text-align:center;padding:12px;">No changes recorded yet.</td></tr>`;
+      return;
+    }
+    body.innerHTML = history.map(h => {
+      const details = h.action === "update"
+        ? `v${esc(h.fromVersion)} → v${esc(h.toVersion)}: ${esc((h.after || []).map(w => `${w.label}${w.enabled === false ? " (off)" : ""}`).join(", ") || "all removed")}`
+        : esc(h.reason || "");
+      const badge = h.action === "update" ? "green" : "red";
+      return `<tr><td>${esc(new Date(h.at).toLocaleString())}</td><td><span class="badge ${badge}">${esc(h.action)}</span></td><td>${esc(h.adminEmail)}</td><td>${esc(h.ip)}</td><td>${details}</td></tr>`;
+    }).join("");
+  }
+
+  async function load(silent) {
+    try {
+      const res = await $.ajax({ type: "GET", url: `${API}/admin`, dataType: "json", cache: false, headers: authHeaders(), timeout: 30000 });
+      const d = (res && res.data) || {};
+      wallets = (d.wallets || []).map(w => ({ key: w.key, label: w.label, network: w.network, address: w.address, enabled: w.enabled !== false }));
+      networks = d.networks || [];
+      version = d.version || 0;
+      dirty = false;
+      $id("dw_network").innerHTML = networkOptions(networks[0] && networks[0].id);
+      $id("dwIntegrity").style.display = d.integrityOk === false ? "block" : "none";
+      render();
+      renderHistory(d.history);
+      setStatus(d.updatedBy ? `Version ${version} · last saved by ${d.updatedBy} on ${new Date(d.updatedAt).toLocaleString()}` : "Nothing saved yet");
+    } catch (err) {
+      console.error("Error loading deposit wallets:", err);
+      setStatus("Could not load wallets.");
+      if (silent !== true) Swal.fire({ icon: "error", title: "Load failed", text: errMsg(err, "Could not load deposit wallets.") });
+    }
+  }
+
+  async function save() {
+    for (const w of wallets) {
+      if (!String(w.label).trim() || !String(w.address).trim()) {
+        Swal.fire({ icon: "warning", title: "Missing details", text: "Every wallet needs a label and an address." });
+        return;
+      }
+    }
+    const summary = wallets.length
+      ? wallets.map(w => `<div style="text-align:left;margin:4px 0;"><b>${esc(w.label)}</b> ${w.enabled ? "" : "<span style=\"opacity:.6\">(disabled)</span>"}<br><code style="word-break:break-all;font-size:12px;">${esc(w.address)}</code></div>`).join("")
+      : "<p>This will remove <b>all</b> deposit wallets. Users will not be able to deposit crypto.</p>";
+    const confirm = await Swal.fire({
+      title: "Confirm deposit wallets",
+      html: `<p style="margin-bottom:8px;">Double-check every address: deposits go straight to these.</p>${summary}`,
+      input: "password",
+      inputLabel: "Your admin password",
+      inputAttributes: { autocomplete: "current-password" },
+      showCancelButton: true,
+      confirmButtonText: "Save",
+      preConfirm: (pw) => { if (!pw) Swal.showValidationMessage("Password is required"); return pw; },
+    });
+    if (!confirm.isConfirmed) return;
+
+    const btn = $id("dwSaveBtn");
+    btn.disabled = true;
+    setStatus("Saving…");
+    try {
+      const payload = wallets.map(w => ({ key: w.key, label: String(w.label).trim(), network: w.network, address: String(w.address).trim(), enabled: !!w.enabled }));
+      await $.ajax({
+        type: "PUT", url: API, dataType: "json", contentType: "application/json", headers: authHeaders(), timeout: 30000,
+        data: JSON.stringify({ wallets: payload, version, currentPassword: confirm.value }),
+      });
+      Swal.fire({ icon: "success", title: "Saved", text: "Deposit wallets updated.", timer: 1500, showConfirmButton: false });
+      await load(true);
+    } catch (err) {
+      console.error("Error saving deposit wallets:", err);
+      setStatus("Save failed");
+      Swal.fire({ icon: "error", title: "Save failed", text: errMsg(err, "Could not save deposit wallets.") });
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!$id("deposit-wallets")) return;
+
+    const navLink = document.querySelector('#mainNav a[data-section="deposit-wallets"]');
+    if (navLink) navLink.addEventListener("click", () => { if (!dirty) load(); });
+
+    $id("dwAddBtn").addEventListener("click", function () {
+      const label = $id("dw_label").value.trim();
+      const network = $id("dw_network").value;
+      const address = $id("dw_address").value.trim();
+      if (!label || !network || !address) {
+        Swal.fire({ icon: "warning", title: "Missing details", text: "Enter a label, network and address." });
+        return;
+      }
+      if (wallets.length >= 20) {
+        Swal.fire({ icon: "warning", title: "Limit reached", text: "At most 20 wallets are allowed." });
+        return;
+      }
+      wallets.push({ key: makeKey(label), label, network, address, enabled: true });
+      $id("dw_label").value = "";
+      $id("dw_address").value = "";
+      render();
+      markDirty();
+    });
+
+    const body = $id("dwBody");
+    const onEdit = (e) => {
+      const t = e.target, i = t.getAttribute("data-i"), f = t.getAttribute("data-f");
+      if (i == null || !f || !wallets[i]) return;
+      wallets[i][f] = f === "enabled" ? t.checked : t.value;
+      markDirty();
+    };
+    body.addEventListener("input", onEdit);
+    body.addEventListener("change", onEdit);
+    body.addEventListener("click", async (e) => {
+      const i = e.target.getAttribute && e.target.getAttribute("data-remove");
+      if (i == null) return;
+      const ok = await Swal.fire({ icon: "warning", title: `Remove "${esc(wallets[i].label)}"?`, text: "It is removed when you click Save Changes.", showCancelButton: true, confirmButtonText: "Remove" });
+      if (!ok.isConfirmed) return;
+      wallets.splice(Number(i), 1);
+      render();
+      markDirty();
+    });
+
+    $id("dwSaveBtn").addEventListener("click", save);
+    $id("dwReloadBtn").addEventListener("click", () => load());
+
+    load(true); // silent: no popup if the admin isn't logged in yet
   });
 })();
 </script>
